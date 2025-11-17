@@ -17,8 +17,6 @@ export class MapViewComponent {
   truck = input<Truck | null>(null);
   containerSelected = output<string>();
 
-  readonly circumference = 2 * Math.PI * 10; // SVG circle radius is 10
-
   selectContainer(id: string): void {
     this.containerSelected.emit(id);
   }
@@ -31,20 +29,14 @@ export class MapViewComponent {
     return 'bg-transparent'; // No ping for other statuses
   }
 
-  getDonutChartColorClass(fillLevel: number): string {
-    if (fillLevel >= 95) return 'stroke-red-500';
-    if (fillLevel > 80) return 'stroke-yellow-500';
-    return 'stroke-green-500';
-  }
-
-  getDonutTextColorClass(fillLevel: number): string {
-    if (fillLevel >= 95) return 'fill-red-400';
-    if (fillLevel > 80) return 'fill-yellow-400';
-    return 'fill-green-400';
-  }
-
-  getDonutChartOffset(fillLevel: number): number {
-    return this.circumference - (fillLevel / 100) * this.circumference;
+  getContainerColor(status: ContainerStatus): string {
+    switch (status) {
+      case 'OK': return '#9CA3AF'; // gray-400
+      case 'Full': return '#F59E0B'; // yellow-500
+      case 'Overweight': return '#F97316'; // orange-500
+      case 'Pickup Required': return '#EF4444'; // red-500
+      default: return '#6B7280'; // gray-500
+    }
   }
 
   truckPathPoints = computed(() => {
