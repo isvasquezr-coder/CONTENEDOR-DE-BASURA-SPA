@@ -49,4 +49,20 @@ export class MapViewComponent {
       .map(p => `${(p.gridX / 20) * 100},${(p.gridY / 20) * 100}`)
       .join(' ');
   });
+  
+  truckRotation = computed(() => {
+    const truck = this.truck();
+    if (!truck || truck.status !== 'On Route' || truck.path.length === 0) {
+      return 0;
+    }
+    const currentLoc = truck.location;
+    const nextLoc = truck.path[0];
+    const dx = nextLoc.gridX - currentLoc.gridX;
+    const dy = nextLoc.gridY - currentLoc.gridY;
+    
+    // Calculate angle in radians, convert to degrees, and add 90 degrees offset
+    // because the truck SVG points upwards (0 deg) instead of to the right.
+    const angle = Math.atan2(dy, dx) * (180 / Math.PI) + 90;
+    return angle;
+  });
 }

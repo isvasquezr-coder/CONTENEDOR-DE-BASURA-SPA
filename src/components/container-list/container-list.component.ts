@@ -35,9 +35,9 @@ export class ContainerListComponent {
     }
   }
 
-  getFillLevelBarClass(fillLevel: number): string {
-    if (fillLevel >= 95) return 'bg-red-500';
-    if (fillLevel > 80) return 'bg-yellow-500';
-    return 'bg-green-500';
+  getFillLevelStrokeClass(fillLevel: number): string {
+    if (fillLevel >= 95) return 'text-red-500';
+    if (fillLevel > 80) return 'text-yellow-500';
+    return 'text-green-500';
   }
 }

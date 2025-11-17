@@ -1,9 +1,11 @@
-import { Injectable, signal, OnDestroy } from '@angular/core';
+import { Injectable, signal, OnDestroy, inject } from '@angular/core';
 import { SmartContainer, ContainerStatus } from '../models/container.model';
 import { Truck } from '../models/truck.model';
+import { PathfindingService } from './pathfinding.service';
 
 @Injectable({ providedIn: 'root' })
 export class ContainerService implements OnDestroy {
+  private pathfindingService = inject(PathfindingService);
   private initialContainers: SmartContainer[] = [
     { id: 'BIN-001', location: { address: 'Calle Principal 123', gridX: 4, gridY: 5 }, fillLevel: 25, weight: 10, status: 'OK', fillRate: 1.1 },
     { id: 'BIN-002', location: { address: 'Avenida Central 456', gridX: 18, gridY: 8 }, fillLevel: 88, weight: 40, status: 'OK', fillRate: 2.5 },
@@ -39,7 +41,7 @@ export class ContainerService implements OnDestroy {
     this.containers.set(initializedData);
 
     this.simulationInterval = setInterval(() => this.simulateDataUpdate(), 2000);
-    this.truckSimulationInterval = setInterval(() => this.simulateTruckMovement(), 400);
+    this.truckSimulationInterval = setInterval(() => this.simulateTruckMovement(), 200);
   }
 
   private simulateDataUpdate(): void {
@@ -80,61 +82,79 @@ export class ContainerService implements OnDestroy {
       return newContainer;
   }
 
+  private addRouteForContainers(
+    containers: SmartContainer[],
+    startLocation: { gridX: number; gridY: number },
+    fullPath: { gridX: number; gridY: number }[],
+    targetIds: string[]
+  ): { gridX: number; gridY: number } {
+    let remainingContainers = [...containers];
+    let currentLocation = startLocation;
+
+    while (remainingContainers.length > 0) {
+      let nearestContainer: SmartContainer | null = null;
+      let shortestPath: { gridX: number; gridY: number }[] = [];
+
+      for (const container of remainingContainers) {
+        const path = this.pathfindingService.findPath(currentLocation, container.location);
+        if (path.length > 0 && (shortestPath.length === 0 || path.length < shortestPath.length)) {
+          shortestPath = path;
+          nearestContainer = container;
+        }
+      }
+
+      if (nearestContainer) {
+        if (fullPath.length > 0) shortestPath.shift();
+        fullPath.push(...shortestPath);
+        targetIds.push(nearestContainer.id);
+        currentLocation = nearestContainer.location;
+        remainingContainers = remainingContainers.filter(c => c.id !== nearestContainer!.id);
+      } else {
+        break;
+      }
+    }
+    return currentLocation;
+  }
+
   private updateTruckRouteDynamically(): void {
     const truck = this.truck();
+    if (truck.status === 'On Route') return;
 
     const pickupRequiredContainers = this.containers().filter(c => c.status === 'Pickup Required');
     const fullContainers = this.containers().filter(c => c.status === 'Full');
 
-    // Build the route for pickups using a nearest-neighbor approach
-    const newPath: { gridX: number; gridY: number }[] = [];
-    const newTargetIds: string[] = [];
+    if (pickupRequiredContainers.length === 0 && fullContainers.length === 0) {
+      const isAtDepot = Math.hypot(truck.location.gridX - this.depot.gridX, truck.location.gridY - this.depot.gridY) < 0.5;
+      if (!isAtDepot) {
+        const pathToDepot = this.pathfindingService.findPath(truck.location, this.depot);
+        this.truck.update(t => ({ ...t, path: pathToDepot, status: 'On Route', targetContainerIds: [] }));
+      }
+      return;
+    }
+
+    const fullPath: { gridX: number; gridY: number }[] = [];
+    const targetIds: string[] = [];
     let currentLocation = truck.location;
 
-    const findAndAddStops = (containers: SmartContainer[]) => {
-      const remaining = [...containers];
-      while (remaining.length > 0) {
-        remaining.sort((a, b) => {
-          const distA = Math.hypot(a.location.gridX - currentLocation.gridX, a.location.gridY - currentLocation.gridY);
-          const distB = Math.hypot(b.location.gridX - currentLocation.gridX, b.location.gridY - currentLocation.gridY);
-          return distA - distB;
-        });
-        const nextStop = remaining.shift()!;
-        newPath.push(nextStop.location);
-        newTargetIds.push(nextStop.id);
-        currentLocation = nextStop.location;
-      }
-    };
+    // First, route for "Pickup Required" containers
+    currentLocation = this.addRouteForContainers(pickupRequiredContainers, currentLocation, fullPath, targetIds);
 
-    findAndAddStops(pickupRequiredContainers);
-    findAndAddStops(fullContainers);
-
-    // If there's a route, the depot is always the final destination.
-    if (newPath.length > 0) {
-      newPath.push(this.depot);
-    } else {
-      // If no pickups, check if the truck should return to depot.
-      const isAtDepot = Math.hypot(truck.location.gridX - this.depot.gridX, truck.location.gridY - this.depot.gridY) < 0.5;
-      if (!isAtDepot && truck.status === 'On Route') {
-        newPath.push(this.depot);
-      }
-    }
+    // Then, route for "Full" containers
+    currentLocation = this.addRouteForContainers(fullContainers, currentLocation, fullPath, targetIds);
     
-    const oldTargetIds = truck.targetContainerIds ?? [];
-    const isPathUnchanged = newTargetIds.length === oldTargetIds.length && newTargetIds.every((id, i) => id === oldTargetIds[i]);
-
-    if (!isPathUnchanged) {
+    if (fullPath.length > 0) {
+      const pathToDepot = this.pathfindingService.findPath(currentLocation, this.depot);
+      if (pathToDepot.length > 0) pathToDepot.shift();
+      fullPath.push(...pathToDepot);
+      
       this.truck.update(t => ({
         ...t,
-        path: newPath,
-        targetContainerIds: newTargetIds,
-        status: newPath.length > 0 ? 'On Route' : 'Idle',
+        path: fullPath,
+        targetContainerIds: targetIds,
+        status: 'On Route',
       }));
-    } else if (truck.status === 'Idle' && newPath.length > 0) {
-       this.truck.update(t => ({ ...t, status: 'On Route' }));
     }
   }
-
 
   private simulateTruckMovement(): void {
     const truck = this.truck();
@@ -144,7 +164,7 @@ export class ContainerService implements OnDestroy {
 
     const { location, path } = truck;
     const target = path[0];
-    const speed = 0.5;
+    const speed = 0.5; // Grid cells per tick
 
     const dx = target.gridX - location.gridX;
     const dy = target.gridY - location.gridY;
@@ -155,13 +175,7 @@ export class ContainerService implements OnDestroy {
       const newLocation = target;
       const remainingPath = path.slice(1);
 
-      const isDepot = target.gridX === this.depot.gridX && target.gridY === this.depot.gridY;
-
-      if (isDepot) {
-        this.truck.update(t => ({ ...t, location: this.depot, status: 'Idle', path: [], targetContainerIds: [] }));
-        return;
-      }
-
+      // Check if this location is a container pickup point
       const containerToCollect = this.containers().find(c =>
         c.location.gridX === target.gridX && c.location.gridY === target.gridY
       );
@@ -170,6 +184,12 @@ export class ContainerService implements OnDestroy {
         this.containers.update(all => all.map(c =>
           c.id === containerToCollect.id ? { ...c, fillLevel: 0, weight: 0, status: 'OK' } : c
         ));
+      }
+      
+      // Check if we've reached the final destination (depot)
+      if (remainingPath.length === 0) {
+         this.truck.update(t => ({ ...t, location: this.depot, status: 'Idle', path: [], targetContainerIds: [] }));
+         return;
       }
 
       // Move to next point in the path

@@ -18,20 +18,30 @@
             
             <p class="text-sm text-gray-400 mb-3">{{ container.location.address }}</p>
 
-            <div class="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                    <label class="text-xs text-gray-500 block">Nivel de llenado</label>
-                    <div class="w-full bg-gray-600 rounded-full h-2.5 mt-1">
-                      <div [class]="getFillLevelBarClass(container.fillLevel)" 
-                           class="h-2.5 rounded-full" 
-                           [style.width.%]="container.fillLevel">
-                      </div>
+            <div class="flex justify-around items-center text-sm mt-2">
+                <div class="flex flex-col items-center">
+                    <label class="text-xs text-gray-500 block mb-1">Nivel de llenado</label>
+                    <div class="relative w-20 h-20">
+                        <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                            <path class="text-gray-600"
+                                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                fill="none" stroke="currentColor" stroke-width="3.5" />
+                            <path [class]="getFillLevelStrokeClass(container.fillLevel)"
+                                stroke="currentColor" stroke-width="3.5" fill="none"
+                                stroke-linecap="round"
+                                stroke-dasharray="100, 100"
+                                [style.stroke-dashoffset]="100 - container.fillLevel"
+                                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        </svg>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <span class="text-xl font-bold text-white font-mono">{{ container.fillLevel.toFixed(0) }}%</span>
+                        </div>
                     </div>
-                    <p class="text-right text-white font-mono">{{ container.fillLevel.toFixed(0) }}%</p>
                 </div>
-                 <div>
-                    <label class="text-xs text-gray-500 block">Peso</label>
-                     <p class="text-white font-mono text-lg">{{ container.weight.toFixed(1) }} kg / 50.0 kg</p>
+                 <div class="flex flex-col items-center">
+                    <label class="text-xs text-gray-500 block mb-1">Peso</label>
+                    <p class="text-white font-mono text-2xl">{{ container.weight.toFixed(1) }}</p>
+                    <p class="text-xs text-gray-400">kg / 50.0 kg</p>
                 </div>
             </div>
 
