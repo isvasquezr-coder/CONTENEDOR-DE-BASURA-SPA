@@ -1,0 +1,108 @@
+<div class="min-h-screen bg-gray-900 text-gray-200 font-sans">
+  <header class="bg-gray-800 shadow-md p-4 flex justify-between items-center">
+    <div class="flex items-center space-x-3">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-400" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M11 21h2v-2h-2v2zm-2-4h6v-2h-6v2zm-2-4h10v-2H7v2zm-2-4h14V7H5v2zm12-5H7c-.55 0-1 .45-1 1v2h12V5c0-.55-.45-1-1-1z" opacity=".3"/>
+        <path d="M18 4v2H6V4c0-.55.45-1 1-1h10c.55 0 1 .45 1 1zM5 9v2h14V9H5zm2 4v2h10v-2H7zm2 4v2h6v-2h-6zm2 4v2h2v-2h-2z"/>
+      </svg>
+      <h1 class="text-2xl font-bold text-white">Smart Bin Monitor</h1>
+    </div>
+    @if(pickupRequiredCount() > 0) {
+      <div class="flex items-center bg-red-600/80 text-white px-4 py-2 rounded-lg shadow">
+         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+        </svg>
+        <span class="font-semibold">{{ pickupRequiredCount() }} Contenedores requieren retiro</span>
+      </div>
+    }
+  </header>
+
+  <main class="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6">
+    <div class="lg:col-span-1 flex flex-col gap-6">
+      <div class="bg-gray-800 p-4 rounded-lg shadow-lg">
+         <h2 class="text-xl font-semibold mb-4 border-b border-gray-700 pb-2">Filtros</h2>
+         <div class="flex space-x-2">
+            <button (click)="setFilter('All')" 
+                    [class]="filterStatus() === 'All' ? 'bg-green-500 text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'"
+                    class="flex-1 py-2 px-4 rounded-md transition-colors duration-200">
+                Todos
+            </button>
+            <button (click)="setFilter('Pickup Required')" 
+                    [class]="filterStatus() === 'Pickup Required' ? 'bg-red-500 text-white' : 'bg-gray-700 hover:bg-gray-600 text-gray-300'"
+                    class="flex-1 py-2 px-4 rounded-md transition-colors duration-200">
+                Requieren Retiro
+            </button>
+         </div>
+      </div>
+       <div class="bg-gray-800 p-4 rounded-lg shadow-lg">
+        <h2 class="text-xl font-semibold mb-4 border-b border-gray-700 pb-2 flex items-center">
+           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-green-400" fill="currentColor" viewBox="0 0 20 20"><path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"></path><path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H11v-1a1 1 0 00-1-1H4a1 1 0 00-1-1V5a1 1 0 001-1h3a1 1 0 011 1v1h1a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 2h-1.05a2.5 2.5 0 01-4.9 0H3a3 3 0 00-3 3v10a3 3 0 003 3h1.05a2.5 2.5 0 014.9 0H11a3 3 0 003-3v-1h-1a1 1 0 00-1 1v1a1 1 0 01-1 1h-1.05a2.5 2.5 0 01-4.9 0H3a1 1 0 01-1-1V5a1 1 0 011-1h5.05a2.5 2.5 0 014.9 0H17a3 3 0 003-3V5a3 3 0 00-3-3h-3z"></path></svg>
+          Estado del Camión
+        </h2>
+        @if (truck(); as truck) {
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between">
+              <span class="text-gray-400">ID Camión:</span>
+              <span class="font-mono text-white">{{ truck.id }}</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-gray-400">Estado:</span>
+              <span class="font-semibold px-2 py-0.5 rounded-full text-xs" [class]="truck.status === 'Idle' ? 'bg-gray-600 text-gray-300' : 'bg-green-500/30 text-green-300 animate-pulse'">
+                {{ truck.status === 'Idle' ? 'Inactivo' : 'En Ruta' }}
+              </span>
+            </div>
+             @if (nextStopAddress()) {
+              <div class="pt-2 border-t border-gray-700/50">
+                  <span class="text-gray-400 text-xs">Próxima Parada:</span>
+                  <p class="text-white font-semibold">{{ nextStopAddress() }}</p>
+              </div>
+            }
+          </div>
+        }
+      </div>
+      <div class="bg-gray-800 p-4 rounded-lg shadow-lg">
+        <h2 class="text-xl font-semibold mb-4 border-b border-gray-700 pb-2 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+          </svg>
+          Llenado Rápido
+        </h2>
+        <ul class="space-y-3">
+          @for (container of fastestFillingContainers(); track container.id) {
+            <li 
+              class="p-3 bg-gray-700/50 rounded-md hover:bg-gray-700 transition-colors duration-200 cursor-pointer" 
+              [class.border-cyan-400]="selectedContainerId() === container.id"
+              [class.border-transparent]="selectedContainerId() !== container.id"
+              class="border"
+              (click)="handleContainerSelection(container.id)">
+              <div class="flex justify-between items-center">
+                <span class="font-bold text-white">{{ container.id }}</span>
+                <div class="flex items-center text-sm text-cyan-300">
+                   <span class="font-mono">{{ container.fillRate?.toFixed(1) }}</span>
+                   <span class="ml-1 text-xs text-gray-400">tasa</span>
+                </div>
+              </div>
+              <p class="text-xs text-gray-400 mt-1">{{ container.location.address }}</p>
+            </li>
+          } @empty {
+            <p class="text-gray-500 text-center py-4">No hay contenedores activos.</p>
+          }
+        </ul>
+      </div>
+
+      <app-container-list 
+        [containers]="filteredContainers()" 
+        [selectedContainerId]="selectedContainerId()"
+        (containerSelected)="handleContainerSelection($event)">
+      </app-container-list>
+    </div>
+    <div class="lg:col-span-2">
+       <app-map-view 
+        [containers]="containers()"
+        [selectedContainerId]="selectedContainerId()"
+        [truck]="truck()"
+        (containerSelected)="handleContainerSelection($event)">
+      </app-map-view>
+    </div>
+  </main>
+</div>

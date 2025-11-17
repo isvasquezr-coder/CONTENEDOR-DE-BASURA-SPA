@@ -1,0 +1,5 @@
+{
+  "name": "Smart Bin Monitor",
+  "description": "A dashboard to monitor a network of smart trash containers, tracking their fill level, weight, and location on a map to optimize collection routes.",
+  "requestFramePermissions": []
+}

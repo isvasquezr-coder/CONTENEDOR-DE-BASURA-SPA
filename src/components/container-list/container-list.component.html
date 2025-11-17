@@ -1,0 +1,47 @@
+<div class="bg-gray-800 rounded-lg shadow-lg overflow-hidden h-[calc(100vh-620px)]">
+  <h2 class="text-xl font-semibold p-4 border-b border-gray-700">Contenedores</h2>
+  <div class="overflow-y-auto h-[calc(100%-65px)]">
+    @if (containers().length > 0) {
+      <ul class="divide-y divide-gray-700">
+        @for (container of containers(); track container.id) {
+          <li 
+            (click)="selectContainer(container.id)"
+            class="p-4 cursor-pointer transition-colors duration-200"
+            [class]="selectedContainerId() === container.id ? 'bg-gray-700' : 'hover:bg-gray-700/50'">
+            
+            <div class="flex justify-between items-center mb-2">
+              <span class="font-bold text-lg text-white">{{ container.id }}</span>
+              <span class="px-3 py-1 text-xs font-semibold rounded-full" [class]="getStatusClasses(container.status)">
+                {{ container.status === 'Pickup Required' ? 'Requiere Retiro' : container.status }}
+              </span>
+            </div>
+            
+            <p class="text-sm text-gray-400 mb-3">{{ container.location.address }}</p>
+
+            <div class="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                    <label class="text-xs text-gray-500 block">Nivel de llenado</label>
+                    <div class="w-full bg-gray-600 rounded-full h-2.5 mt-1">
+                      <div [class]="getFillLevelBarClass(container.fillLevel)" 
+                           class="h-2.5 rounded-full" 
+                           [style.width.%]="container.fillLevel">
+                      </div>
+                    </div>
+                    <p class="text-right text-white font-mono">{{ container.fillLevel.toFixed(0) }}%</p>
+                </div>
+                 <div>
+                    <label class="text-xs text-gray-500 block">Peso</label>
+                     <p class="text-white font-mono text-lg">{{ container.weight.toFixed(1) }} kg / 50.0 kg</p>
+                </div>
+            </div>
+
+          </li>
+        }
+      </ul>
+    } @else {
+      <div class="p-8 text-center text-gray-500">
+        <p>No hay contenedores que coincidan con el filtro actual.</p>
+      </div>
+    }
+  </div>
+</div>
