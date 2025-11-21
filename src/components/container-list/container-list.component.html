@@ -10,7 +10,12 @@
             [class]="selectedContainerId() === container.id ? 'bg-gray-700' : 'hover:bg-gray-700/50'">
             
             <div class="flex justify-between items-center mb-2">
-              <span class="font-bold text-lg text-white">{{ container.id }}</span>
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-lg text-white">{{ container.id }}</span>
+                @if (targetContainerIds().includes(container.id)) {
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-400 animate-pulse" fill="currentColor" viewBox="0 0 20 20"><path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"></path><path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H11v-1a1 1 0 00-1-1H4a1 1 0 00-1-1V5a1 1 0 001-1h3a1 1 0 011 1v1h1a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 2h-1.05a2.5 2.5 0 01-4.9 0H3a3 3 0 00-3 3v10a3 3 0 003 3h1.05a2.5 2.5 0 014.9 0H11a3 3 0 003-3v-1h-1a1 1 0 00-1 1v1a1 1 0 01-1 1h-1.05a2.5 2.5 0 01-4.9 0H3a1 1 0 01-1-1V5a1 1 0 011-1h5.05a2.5 2.5 0 014.9 0H17a3 3 0 003-3V5a3 3 0 00-3-3h-3z"></path></svg>
+                }
+              </div>
               <span class="px-3 py-1 text-xs font-semibold rounded-full" [class]="getStatusClasses(container.status)">
                 {{ container.status === 'Pickup Required' ? 'Requiere Retiro' : container.status }}
               </span>

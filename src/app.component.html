@@ -40,17 +40,33 @@
           Estado del Camión
         </h2>
         @if (truck(); as truck) {
-          <div class="space-y-2 text-sm">
+          <div class="space-y-3 text-sm">
             <div class="flex justify-between">
               <span class="text-gray-400">ID Camión:</span>
               <span class="font-mono text-white">{{ truck.id }}</span>
             </div>
             <div class="flex justify-between items-center">
               <span class="text-gray-400">Estado:</span>
-              <span class="font-semibold px-2 py-0.5 rounded-full text-xs" [class]="truck.status === 'Idle' ? 'bg-gray-600 text-gray-300' : 'bg-green-500/30 text-green-300 animate-pulse'">
-                {{ truck.status === 'Idle' ? 'Inactivo' : 'En Ruta' }}
+              <span class="font-semibold px-2 py-0.5 rounded-full text-xs"
+                    [class]="truck.status === 'Idle' ? 'bg-gray-600 text-gray-300' : 
+                             truck.status === 'On Route' ? 'bg-green-500/30 text-green-300 animate-pulse' : 
+                             truck.status === 'Returning to Depot' ? 'bg-orange-500/30 text-orange-400' :
+                             truck.status === 'Cleaning' ? 'bg-cyan-500/30 text-cyan-400 animate-pulse' : ''">
+                {{ truck.status === 'Idle' ? 'Inactivo' : 
+                   truck.status === 'On Route' ? 'En Ruta' : 
+                   truck.status === 'Returning to Depot' ? 'Regresando' :
+                   truck.status === 'Cleaning' ? 'Limpiando' : '' }}
               </span>
             </div>
+             <div>
+                <div class="flex justify-between mb-1">
+                    <span class="text-gray-400">Carga:</span>
+                    <span class="font-mono text-white">{{ truck.currentLoad.toFixed(1) }} / {{ truck.capacity.toFixed(1) }} kg</span>
+                </div>
+                <div class="w-full bg-gray-700 rounded-full h-2.5">
+                    <div class="bg-indigo-500 h-2.5 rounded-full" [style.width.%]="(truck.currentLoad / truck.capacity) * 100"></div>
+                </div>
+             </div>
              @if (nextStopAddress()) {
               <div class="pt-2 border-t border-gray-700/50">
                   <span class="text-gray-400 text-xs">Próxima Parada:</span>
@@ -93,6 +109,7 @@
       <app-container-list 
         [containers]="filteredContainers()" 
         [selectedContainerId]="selectedContainerId()"
+        [targetContainerIds]="truck()?.targetContainerIds ?? []"
         (containerSelected)="handleContainerSelection($event)">
       </app-container-list>
     </div>
@@ -101,6 +118,7 @@
         [containers]="containers()"
         [selectedContainerId]="selectedContainerId()"
         [truck]="truck()"
+        [targetContainerIds]="truck()?.targetContainerIds ?? []"
         (containerSelected)="handleContainerSelection($event)">
       </app-map-view>
     </div>

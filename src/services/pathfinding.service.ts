@@ -32,22 +32,33 @@ export class PathfindingService {
   private defineObstacles(): void {
     // Map building rects from map-view.component.html to grid cells
     const buildingRects = [
-      { x: 5, y: 5, w: 15, h: 10 },
-      { x: 25, y: 8, w: 10, h: 20 },
-      { x: 40, y: 2, w: 20, h: 12 },
-      { x: 65, y: 10, w: 15, h: 15 },
-      { x: 85, y: 5, w: 10, h: 25 },
-      { x: 5, y: 20, w: 18, h: 15 },
-      { x: 30, y: 35, w: 30, h: 10 },
-      { x: 65, y: 30, w: 25, h: 20 },
-      { x: 10, y: 40, w: 15, h: 25 },
-      { x: 40, y: 50, w: 20, h: 20 },
-      { x: 70, y: 55, w: 20, h: 35 },
-      { x: 5, y: 70, w: 30, h: 10 },
-      { x: 45, y: 75, w: 20, h: 15 },
+        // Left column
+        { x: 2, y: 2, w: 10, h: 15 },
+        { x: 2, y: 28, w: 10, h: 15 },
+        { x: 2, y: 52, w: 10, h: 15 },
+        { x: 2, y: 78, w: 10, h: 20 },
+        // Middle column 1
+        { x: 22, y: 5, w: 5, h: 10 },
+        { x: 22, y: 28, w: 5, h: 40 },
+        { x: 22, y: 78, w: 5, h: 15 },
+        // Middle column 2 (after river)
+        { x: 42, y: 8, w: 10, h: 30 },
+        { x: 42, y: 52, w: 10, h: 15 },
+        { x: 42, y: 78, w: 10, h: 20 },
+        // Middle column 3
+        { x: 62, y: 2, w: 20, h: 15 },
+        { x: 62, y: 28, w: 20, h: 15 },
+        { x: 62, y: 52, w: 20, h: 46 },
+        // Right column
+        { x: 92, y: 5, w: 6, h: 38 },
+        { x: 92, y: 52, w: 6, h: 46 },
     ];
+    
+    const waterRect = { x: 30, y: 0, w: 10, h: 100 };
+    const allObstacles = [...buildingRects, waterRect];
 
-    buildingRects.forEach(rect => {
+    allObstacles.forEach(rect => {
+      // Map viewbox units (0-100) to grid cells (0-19)
       const startX = Math.floor(rect.x / 5);
       const startY = Math.floor(rect.y / 5);
       const endX = Math.ceil((rect.x + rect.w) / 5);
@@ -56,10 +67,25 @@ export class PathfindingService {
       for (let y = startY; y < endY; y++) {
         for (let x = startX; x < endX; x++) {
           if (x >= 0 && x < this.GRID_WIDTH && y >= 0 && y < this.GRID_HEIGHT) {
-            // gridX/gridY are 1-based, so obstacle grid is 0-based
             this.obstacles[y][x] = true;
           }
         }
+      }
+    });
+
+    // Define bridges where roads cross the river, making them traversable
+    const bridgeLocations = [
+      // Road at viewbox y=20 (grid y=4)
+      { x: 6, y: 4 }, { x: 7, y: 4 },
+      // Road at viewbox y=45 (grid y=9)
+      { x: 6, y: 9 }, { x: 7, y: 9 },
+      // Road at viewbox y=70 (grid y=14)
+      { x: 6, y: 14 }, { x: 7, y: 14 },
+    ];
+
+    bridgeLocations.forEach(loc => {
+      if (loc.y >= 0 && loc.y < this.GRID_HEIGHT && loc.x >= 0 && loc.x < this.GRID_WIDTH) {
+        this.obstacles[loc.y][loc.x] = false;
       }
     });
   }
@@ -83,6 +109,8 @@ export class PathfindingService {
       openList.sort((a, b) => a.f - b.f);
       const currentNode = openList.shift()!;
       
+      if (currentNode.x < 0 || currentNode.x >= this.GRID_WIDTH || currentNode.y < 0 || currentNode.y >= this.GRID_HEIGHT) continue;
+      if (closedList[currentNode.y][currentNode.x]) continue;
       closedList[currentNode.y][currentNode.x] = true;
       
       if (currentNode.x === endGrid.x && currentNode.y === endGrid.y) {

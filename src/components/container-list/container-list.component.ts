@@ -14,6 +14,7 @@ import { SmartContainer, ContainerStatus } from '../../models/container.model';
 export class ContainerListComponent {
   containers = input.required<SmartContainer[]>();
   selectedContainerId = input<string | null>(null);
+  targetContainerIds = input<string[]>([]);
   containerSelected = output<string>();
 
   selectContainer(id: string): void {
@@ -37,7 +38,7 @@ export class ContainerListComponent {
 
   getFillLevelStrokeClass(fillLevel: number): string {
     if (fillLevel >= 95) return 'text-red-500';
-    if (fillLevel > 80) return 'text-yellow-500';
+    if (fillLevel >= 50) return 'text-yellow-500';
     return 'text-green-500';
   }
 }

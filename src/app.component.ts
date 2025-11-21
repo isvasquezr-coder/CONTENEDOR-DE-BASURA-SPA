@@ -61,8 +61,17 @@ export class AppComponent {
   handleContainerSelection(id: string | null): void {
     if (this.selectedContainerId() === id) {
         this.selectedContainerId.set(null);
-    } else {
-        this.selectedContainerId.set(id);
+        return;
+    }
+    
+    this.selectedContainerId.set(id);
+
+    if (id) {
+        const container = this.containers().find(c => c.id === id);
+        // Allow dispatching to any container manually
+        if (container) {
+            this.containerService.dispatchTruckToContainer(container.id);
+        }
     }
   }
 
